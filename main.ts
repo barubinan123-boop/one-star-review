@@ -15,30 +15,43 @@ import { join } from 'node:path'
 // 3. Deadpan throughout: a flat customer-service complaint, no winking,
 //    no exclamation mark, no explaining that it is a joke.
 // 4. Twist in the last few words: the review is read straight as a
-//    complaint about being tired, then lands on "the worst return policy
-//    I have ever seen", reframing a night of sleep as a defective product.
+//    complaint about being tired, then escalates through "No refund, no
+//    exchange" and lands on "no manager to speak to", filing sleep as a
+//    defective product whose customer service does not exist.
 // 5. Tight and specific: one joke only, one line, no filler, no second
 //    joke crowding the first.
 const review =
-  'One star. I give sleep eight hours every night and wake up tired anyway, which is the worst return policy I have ever seen.'
+  'One star. I give sleep eight hours every night and wake up tired anyway. No refund, no exchange, no manager to speak to.'
 
 const MIN_LENGTH = 1
 const MAX_LENGTH = 160
 
 function main(): void {
   // The gate requires 1-160 characters, a single line, and real content.
-  // Fail hard instead of writing an invalid entry.
+  // Fail hard instead of writing an invalid entry. A single line means
+  // no line breaks, no tabs, and no stray leading or trailing space, so
+  // the byte count the gate sees is exactly the review's own length.
   if (review.length < MIN_LENGTH || review.length > MAX_LENGTH) {
     throw new Error(
       `Review must be ${MIN_LENGTH}-${MAX_LENGTH} characters, got ${review.length}.`,
     )
   }
-  if (review.includes('\n') || review.trim().length === 0) {
+  if (
+    review.includes('\n') ||
+    review.includes('\r') ||
+    review.includes('\t') ||
+    review !== review.trim() ||
+    review.trim().length === 0
+  ) {
     throw new Error('Review must be a single non-empty line.')
   }
   if (review.includes('!')) {
     throw new Error('Deadpan review must not use exclamation marks.')
   }
+  // The twist works because it arrives last: "No refund, no exchange"
+  // sets up a customer-service complaint, and "no manager to speak to"
+  // closes it by treating sleep as a product with no one accountable,
+  // so the joke lands only after the complaint has been read straight.
 
   const outDir = '/output'
   mkdirSync(outDir, { recursive: true })
